@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-module
+  type="WEB"
+  name="RefactorBall"
+  id="myeclipse.1458023035525"
+  context-root="/GoodLuck"
+  j2ee-spec="5.0"
+  archive="RefactorBall.war">
+  <attributes>
+    <attribute name="webrootdir" value="/WebRoot" />
+  </attributes>
+</project-module>
+

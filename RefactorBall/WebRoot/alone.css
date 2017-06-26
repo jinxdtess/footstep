@@ -1,0 +1,7 @@
+<style type="text/css">
+            .banner ul{overflow:hidden;}
+			.banner li{float:left;height:30px;line-height:30px;text-align:center;width:80px;list-style:none;}
+			.banner a{display:block;color:darkgoldenrod;}
+			.banner .current{background-color:#F00;color:white;}
+			.banner a:hover{background-color:#CF3;color:#000;}
+</style>

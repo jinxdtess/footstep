@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<!--命名空间的作用：1.Winner win=session.selectOne("org.jinxd.dao.WinnerDao.findWinnerById",1900) 
+                                                   为单纯基于MyBaris的测试类找到对应的sql方法
+                 2.为基于spring-mybatis的框架的dao接口作出相应的实现 ，这里的namespace的值就是对应的dao接口-->
+<mapper namespace="org.jinxd.dao.WinnerDao">
+      <!-- 根据id查找 -->
+      <select id="findWinnerById" parameterType="int" resultType="org.jinxd.entity.Winner">
+      		select * from winner where id=#{id}
+      </select>
+
+</mapper>

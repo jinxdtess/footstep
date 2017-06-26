@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+
+<mapper namespace="org.jinxd.dao.LotteryDao">
+     <cache readOnly="true" eviction="FIFO"></cache>
+     <!--查找 最新开奖号码 -->
+     <select id="findByMaxId" resultType="org.jinxd.entity.Lottery">
+              select w.id,w.reds,w.blue,w.opendate,w.issue,
+                     r.partition,r.maxrange,r.disperse,r.wincounts,r.parity,r.evenno 
+              from winner w join reds r 
+              on r.id= w.red_id 
+              where w.id=(select max(id) from winner)
+     </select>
+    
+     <!-- 根据id号查找开奖号 -->
+     <select id="findById" parameterType="int" resultMap="lottery">
+           select * from winner where id=#{id}
+     </select>
+     
+     <resultMap id="lottery" type="org.jinxd.entity.Winner2">
+          <id column="id" property="id"/>
+          <result column="blue" property="blue"/>
+          <result column="opendate" property="opendate"/>
+          <result column="issue" property="issue"/>
+          <association property="reds" javaType="org.jinxd.entity.Reds"
+          column="red_id" select="selectReds"/>
+     </resultMap>
+     <!-- 根据红球号码查找reds表中的对应记录 -->
+     <select id="selectReds" parameterType="int" resultType="org.jinxd.entity.Reds">
+             select * from reds where id=#{red_id}
+     </select>
+   
+   
+   
+     
+     <!-- 通过Ajax分页查询 -->
+   
+<!--传入传出参数要注明mode=IN/OUT 并要注明jdbcType（在网上可以查询mybatis支持哪些jdbcType类型），返回参数要注明对应的resultMap--> 
+     
+   <resultMap type="org.jinxd.entity.Lottery" id="lotterylist">
+         <result column="id" property="id"/>
+         <result column="codes" property="reds"/>
+         <result column="blue" property="blue"/>
+         <result column="issue" property="issue"/>
+         <result column="opendate" property="opendate"/>
+         <result column="maxrange" property="maxrange"/>
+         <result column="evenno" property="evenno"/>
+         <result column="disperse" property="disperse"/>
+         <result column="parity" property="parity"/>
+         <result column="partition" property="partition"/>
+         <result column="wincounts" property="wincounts"/>
+    </resultMap>
+     
+    <parameterMap type="java.util.Map" id="getLotteryMap">
+         <parameter property="currentpage" mode="IN" jdbcType="INTEGER" javaType="java.lang.Integer"/>
+         <parameter property="lotterys" mode="OUT" jdbcType="OTHER" javaType="java.sql.ResultSet" resultMap="lotterylist"/>
+    </parameterMap>
+  
+   <select id="findLotteryByPage" parameterMap="getLotteryMap" statementType="CALLABLE" useCache="false">
+       <![CDATA[
+	       CALL LOTTERY_PACKAGE.mybatis_lottery_page(
+	                  #{currentpage,mode=IN,jdbcType=INTEGER},
+	                  #{lotterys,mode=OUT,jdbcType=CURSOR,javaType=java.sql.ResultSet,resultMap=lotterylist}
+                                                 )
+        ]]>
+   </select>
+  
+   
+      <!-- 根据ID查找reds表中的对应记录 -->
+     <select id="findWinnerIdById" parameterType="int" resultType="org.jinxd.entity.Reds">
+           select * from reds where id=#{id}
+     </select>
+     
+      <!-- 根据红球号查找其对应的ID -->
+     <select id="findIdByReds" parameterType="String" resultType="java.lang.Integer">
+           select id from reds where codes=#{reds,jdbcType=VARCHAR}
+     </select>
+     
+      <!-- 保存新的开奖号码 -->
+     <insert id="save" parameterType="org.jinxd.entity.Winner">
+            <!-- 关于主键ID的设置 -->
+            <selectKey keyProperty="id" resultType="java.lang.Integer" order="BEFORE">
+            		select winner_seq.nextval from dual
+            </selectKey>
+            insert into winner values(
+                 #{id},
+                 #{reds,jdbcType=VARCHAR},
+                 #{blue,jdbcType=NUMERIC},
+                 #{red_id,jdbcType=NUMERIC},
+                 #{issue,jdbcType=NUMERIC},
+                 #{opendate,jdbcType=DATE}
+            )
+     </insert>
+     
+     
+     <!-- 批量插入新的中奖号码 -->
+     <!-- <insert id="inserts" parameterType="java.util.List">
+	
+		insert into PRESON
+	    select SEQ_PRESON_ID.NEXTVAL,A.* from(
+		<foreach collection="list" item="item" index="index"
+			separator="UNION">
+			SELECT
+			#{item.presonName},
+			#{item.presonTel},
+			#{item.presonEmail},
+			#{item.presonAge}
+			from dual 
+             </foreach>
+		) A
+
+    <insert id="addTrainRecordBatch" useGeneratedKeys="true" parameterType="java.util.List">  
+        <selectKey resultType="long" keyProperty="id" order="AFTER">  
+            SELECT  
+            LAST_INSERT_ID()  
+        </selectKey>  
+        insert into t_train_record (add_time,emp_id,activity_id,flag)   
+        values  
+        <foreach collection="list" item="item" index="index" separator="," >  
+            (#{item.addTime},#{item.empId},#{item.activityId},#{item.flag})  
+        </foreach>  
+    </insert>  
+	</insert> -->
+	<insert id="saves" parameterType="java.util.List">
+		
+		insert into winner
+			select winner_seq.nextval,A.* from(
+	    <foreach collection="list" item="item" index="index" separator="UNION">
+	        select 
+	        	 #{item.reds,jdbcType=VARCHAR},
+                 #{item.blue,jdbcType=NUMERIC},
+                 #{item.red_id,jdbcType=NUMERIC},
+                 #{item.issue,jdbcType=NUMERIC},
+                 #{item.opendate,jdbcType=DATE}
+	        from dual 
+	      </foreach>
+			) A
+	</insert>
+     
+     <!-- 更新中奖号码 -->
+    <update id="update" parameterType="org.jinxd.entity.Winner">
+	           update winner 
+	              <set> 
+	                  <if test="reds!='' and reds!=null">
+	                  		reds=#{reds,jdbcType=VARCHAR},
+	                  </if>
+	                  <if test="blue!='' and blue!=null">
+	                  		blue=#{blue,jdbcType=NUMERIC},
+	                  </if>
+	                  <if test="opendate!='' and opendate!=null">
+	                  		opendate=#{opendate,jdbcType=DATE},
+	                  </if>
+	                  <if test="issue!='' and issue!=null">
+	                  		 issue=#{issue,jdbcType=NUMERIC},
+	                  </if>
+	                  <if test="red_id!='' and red_id!=null">
+	                  		red_id=#{red_id,jdbcType=NUMERIC},
+	                  </if>
+	              </set>
+	           where id=#{id}
+     </update> 
+
+      <!-- 添加中奖号码记录时，与其关联的reds表中wincounts字段加一 -->
+     <update id="upWincounts" parameterType="String">
+           update reds set wincounts=wincounts+1 where codes=#{reds}
+     </update>
+     
+      <!-- 修改中奖号码记录时，与其关联的reds表中wincounts字段减一 -->
+     <update id="downWincounts" parameterType="String">
+           update reds set wincounts=wincounts-1 where codes=#{reds}
+     </update>
+     
+      <!-- 删除中奖记录 -->
+     <delete id="delWinner" parameterType="int">
+           delete from winner where id=#{id}
+     </delete>
+</mapper>

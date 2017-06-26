@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" 
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+ <configuration>
+ 
+       <!-- 使用缓存 
+       <settings>
+           <setting name="lazyLoadingEnabled" value="true"/>
+           <setting name="aggressiveLazyLoading" value="true"/>
+       </settings>-->
+	  <!-- 使用别名<typeAliases>
+	          <typeAlias alias="winner" type="org.jinxd.entity.Winner" />
+	   </typeAliases> -->
+    <!--引用db.properties文件  -->
+   
+    <properties resource="jdbc.properties"/>
+    <environments default="development">
+        
+        <!-- 可以配置多个环境 -->
+	 	<environment id="development">
+	 	    <transactionManager type="JDBC"></transactionManager>
+	 	<!-- type="POOLED"表示已经缓存的，即使用缓存 -->
+	 	    <dataSource type="POOLED">
+	 	        <property name="driver" value="${driver}"/>
+	 	        <property name="url" value="${url}"/>
+	 	        <property name="username" value="${username}"/>
+	 	        <property name="password" value="${password}"/>
+	 	    </dataSource>
+	 	</environment>
+	 	
+   </environments>
+   <mappers>
+   		<mapper resource="org/jinxd/entity/winner.xml"/>
+   		<mapper resource="org/jinxd/entity/lottery.xml"/>
+   		
+   </mappers>
+   <!-- 定义实体类的别名 -->
+   
+ </configuration>
